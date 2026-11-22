@@ -174,17 +174,22 @@ def run(cfg, total_frames, seed):
                 perm = torch.randperm(len(flat))
                 for k in range(0, len(flat), mb):
                     out = loss_fn(flat[perm[k:k + mb]])
-                    loss = out["loss_objective"] + out["loss_critic"] + out["loss_entropy"]
+                    # entropy terms are missing when the entropy coefficient is 0
+                    loss = out["loss_objective"] + out["loss_critic"]
+                    if "loss_entropy" in out.keys():
+                        loss = loss + out["loss_entropy"]
                     optim.zero_grad()
                     loss.backward()
                     nn.utils.clip_grad_norm_(loss_fn.parameters(), 0.5)
                     optim.step()
                     losses.append(loss.item())
-                    ents.append(float(out["entropy"]))
+                    if "entropy" in out.keys():
+                        ents.append(float(out["entropy"]))
             n_updates += 1
             log_and_eval({"frames": frames,
                           "train_return": float(np.mean(recent)) if recent else float("nan"),
-                          "loss": float(np.mean(losses)), "entropy": float(np.mean(ents))})
+                          "loss": float(np.mean(losses)),
+                          "entropy": float(np.mean(ents)) if ents else float("nan")})
         collector.shutdown()
 
     torch.save(policy_net.state_dict(), model_path("pg", f"{cfg['name']}_final.pt"))
