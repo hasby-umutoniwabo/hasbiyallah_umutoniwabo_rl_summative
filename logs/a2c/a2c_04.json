@@ -1,0 +1,13 @@
+{
+  "name": "a2c_04",
+  "algo": "a2c",
+  "lr": 0.001,
+  "gamma": 0.95,
+  "lmbda": 0.95,
+  "entropy": 0.01,
+  "critic": 0.5,
+  "rollout": 400,
+  "hidden": 128,
+  "seed": 0,
+  "total_frames": 100000
+}

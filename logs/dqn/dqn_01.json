@@ -1,0 +1,13 @@
+{
+  "name": "dqn_01",
+  "lr": 0.001,
+  "gamma": 0.99,
+  "buffer": 50000,
+  "batch": 64,
+  "eps_steps": 20000,
+  "target_every": 500,
+  "hidden": 128,
+  "double": false,
+  "seed": 0,
+  "total_frames": 100000
+}

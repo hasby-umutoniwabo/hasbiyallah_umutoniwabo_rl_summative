@@ -1,0 +1,12 @@
+{
+  "name": "reinforce_04",
+  "algo": "reinforce",
+  "lr": 0.001,
+  "gamma": 0.95,
+  "entropy": 0.01,
+  "episodes": 8,
+  "hidden": 128,
+  "baseline": true,
+  "seed": 0,
+  "total_frames": 100000
+}

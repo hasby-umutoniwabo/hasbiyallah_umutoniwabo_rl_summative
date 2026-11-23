@@ -1,0 +1,16 @@
+{
+  "name": "ppo_09",
+  "algo": "ppo",
+  "lr": 0.0003,
+  "gamma": 0.99,
+  "lmbda": 0.95,
+  "entropy": 0.01,
+  "critic": 0.5,
+  "clip": 0.3,
+  "rollout": 1000,
+  "epochs": 8,
+  "minibatch": 100,
+  "hidden": 128,
+  "seed": 0,
+  "total_frames": 100000
+}

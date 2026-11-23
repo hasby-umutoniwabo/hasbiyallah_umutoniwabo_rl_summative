@@ -1,0 +1,42 @@
+{
+  "a2c": {
+    "algo": "a2c",
+    "name": "a2c_11",
+    "hidden": 128,
+    "path": "models/pg/a2c_11_best.pt",
+    "test_success": 1.0,
+    "test_return": 18.005686392386757
+  },
+  "dqn": {
+    "algo": "dqn",
+    "name": "dqn_06",
+    "hidden": 128,
+    "path": "models/dqn/dqn_06_best.pt",
+    "test_success": 0.71,
+    "test_return": 11.635001898018524
+  },
+  "ppo": {
+    "algo": "ppo",
+    "name": "ppo_03",
+    "hidden": 128,
+    "path": "models/pg/ppo_03_best.pt",
+    "test_success": 0.99,
+    "test_return": 18.81457925152779
+  },
+  "reinforce": {
+    "algo": "reinforce",
+    "name": "reinforce_09",
+    "hidden": 128,
+    "path": "models/pg/reinforce_09_best.pt",
+    "test_success": 0.05,
+    "test_return": 2.8094705746398847
+  },
+  "overall": {
+    "algo": "a2c",
+    "name": "a2c_11",
+    "hidden": 128,
+    "path": "models/pg/a2c_11_best.pt",
+    "test_success": 1.0,
+    "test_return": 18.005686392386757
+  }
+}
