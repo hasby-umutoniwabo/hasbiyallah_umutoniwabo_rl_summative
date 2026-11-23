@@ -10,7 +10,7 @@ from training.common import ROOT, evaluate
 from training.policy_io import load_policy
 
 ALGOS = ["dqn", "reinforce", "a2c", "ppo"]
-SKIP = {"name", "algo", "seed", "total_frames"}
+SKIP = {"name", "algo", "seed"}
 
 
 def main():

@@ -50,6 +50,7 @@ CHANGES = {
         {"rollout": 100},
         {"rollout": 1600},
         {"critic": 1.0, "lmbda": 0.9},
+        {"rollout": 25},
     ],
     "ppo": [
         {},
