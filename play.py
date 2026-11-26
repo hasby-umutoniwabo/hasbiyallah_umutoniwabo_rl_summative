@@ -29,6 +29,7 @@ def main():
     p.add_argument("--track", type=int, choices=[0, 1, 2], help="0 health, 1 business, 2 education")
     p.add_argument("--random", action="store_true", help="random agent for comparison")
     p.add_argument("--no-render", action="store_true")
+    p.add_argument("--fps", type=int, default=3, help="sessions per second in the window")
     args = p.parse_args()
 
     if args.random:
@@ -39,6 +40,7 @@ def main():
         label = f"{entry['algo'].upper()} ({entry['name']})"
 
     env = AdaptiveTutorEnv(render_mode=None if args.no_render else "human")
+    env.metadata = {**env.metadata, "render_fps": args.fps}
     print(f"Agent: {label}")
     results = []
     for ep in range(args.episodes):
