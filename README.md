@@ -102,3 +102,9 @@ logs/               training logs and summary.csv
 assets/             screenshot, plots and tables
 tests/              environment, rendering and interactive checks
 ```
+
+## Links
+
+- Demo video: [https://youtu.be/tmnOUigceSw](https://youtu.be/tmnOUigceSw)
+- Report (PDF): [report/Hasbiyallah_Umutoniwabo_RL_Report.pdf](report/Hasbiyallah_Umutoniwabo_RL_Report.pdf)
+- Report (Google Doc): [https://docs.google.com/document/d/1vtAayEnK-gXSUtj9KigbXeB2bOpGuGstQ9avJ_Bs8lQ/edit?usp=sharing](https://docs.google.com/document/d/1vtAayEnK-gXSUtj9KigbXeB2bOpGuGstQ9avJ_Bs8lQ/edit?usp=sharing)
