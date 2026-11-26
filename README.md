@@ -35,6 +35,20 @@ uv run play.py --random
 
 `--track` is 0 for health, 1 for business and finance, 2 for education.
 
+## Interactive mode
+
+Play the tutor yourself. The same environment and trained agents are used.
+
+```
+uv run play.py --interactive --algo ppo
+```
+
+- Click an exercise (4 skills x 3 levels), Break or Review.
+- Hint ON shows what the trained agent would pick. Press SPACE to follow it.
+- Auto lets the agent teach by itself, new learners start on their own.
+- Keys: A auto, H hint, N new learner, T track, + and - speed, B break, R review, Esc quit.
+- Every session is also printed in the terminal, with who chose it (you or the agent).
+
 ## Training
 
 Each script runs the hyperparameter sweep for an algorithm (TorchRL).
@@ -81,10 +95,10 @@ Full logs are in `logs/`, trained models in `models/`.
 ```
 main.py             demo of the best agent
 play.py             run any trained agent
-environment/        custom environment and rendering
+environment/        custom environment, rendering and interactive mode
 training/           DQN, policy gradient training, summary and plots
 models/             saved models (dqn, pg)
 logs/               training logs and summary.csv
 assets/             screenshot, plots and tables
-tests/              environment and rendering checks
+tests/              environment, rendering and interactive checks
 ```

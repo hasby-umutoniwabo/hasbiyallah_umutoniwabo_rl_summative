@@ -30,6 +30,7 @@ def main():
     p.add_argument("--random", action="store_true", help="random agent for comparison")
     p.add_argument("--no-render", action="store_true")
     p.add_argument("--fps", type=int, default=3, help="sessions per second in the window")
+    p.add_argument("--interactive", action="store_true", help="play the tutor yourself, with the agent as a helper")
     args = p.parse_args()
 
     if args.random:
@@ -38,6 +39,11 @@ def main():
     else:
         act, entry = load_agent(args.algo)
         label = f"{entry['algo'].upper()} ({entry['name']})"
+
+    if args.interactive:
+        from environment.interactive import run
+        run(act, label, track=args.track, seed=args.seed, speed=max(1, args.fps - 1))
+        return
 
     env = AdaptiveTutorEnv(render_mode=None if args.no_render else "human")
     env.metadata = {**env.metadata, "render_fps": args.fps}

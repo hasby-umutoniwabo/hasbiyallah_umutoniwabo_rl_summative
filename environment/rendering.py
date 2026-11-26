@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pygame
 
-from environment.custom_env import DIFFICULTIES, SKILLS, TRACK_WEIGHTS, TRACKS
+from environment.custom_env import ACTION_NAMES, DIFFICULTIES, SKILLS, TRACK_WEIGHTS, TRACKS
 
 W, H = 1100, 640
 BG = (240, 243, 248)
@@ -21,6 +21,32 @@ DIFF_COLORS = [(46, 176, 110), (240, 168, 40), (230, 82, 82)]
 TRACK_COLORS = [(32, 178, 140), (66, 133, 244), (245, 140, 70)]
 SKIN = (255, 222, 178)
 SUB = 8  # smooth frames drawn for each session in the window
+
+# layout of the clickable parts used by the interactive mode
+TOP = 92
+TUTOR_X, TUTOR_W = 730, 330
+TRACK_LABELS = ["Random", "Health", "Business", "Education"]
+
+
+def action_rects():
+    # 12 exercise buttons (4 skills x 3 levels) plus break and review
+    rects = {}
+    gx, gy = TUTOR_X + 24 + 54, TOP + 84
+    for c in range(4):
+        for r in range(3):
+            rects[c * 3 + r] = pygame.Rect(gx + c * 57, gy + r * 44, 50, 36)
+    by = TOP + 84 + 3 * 44 + 14
+    rects[12] = pygame.Rect(TUTOR_X + 24, by, 136, 40)
+    rects[13] = pygame.Rect(TUTOR_X + 24 + 146, by, 136, 40)
+    return rects
+
+
+def header_pills():
+    return {name: pygame.Rect(550 + i * 130, 28, 120, 34) for i, name in enumerate(["hint", "auto", "track", "new"])}
+
+
+def mix(a, b, k):
+    return tuple(int(a[i] * (1 - k) + b[i] * k) for i in range(3))
 
 
 class TutorRenderer:
@@ -127,14 +153,18 @@ class TutorRenderer:
             self.clock.tick(self.fps * SUB)
         return None
 
-    def _paint(self, env, d):
+    def _paint(self, env, d, ui=None):
         self.screen.fill(BG)
 
         # header
         self._text("Adaptive Digital Skills Tutor", self.f_title, TEXT, (40, 24))
-        self._text(f"Session {env.t} of {env.max_sessions}", self.f_head, MUTED, (W - 40, 30), right=True)
+        if ui is None:
+            self._text(f"Session {env.t} of {env.max_sessions}", self.f_head, MUTED, (W - 40, 30), right=True)
+        else:
+            self._text(f"Session {env.t} of {env.max_sessions}", self.f_body, MUTED, (42, 62))
+            self._pills(ui)
 
-        top, ch = 92, 378
+        top, ch = TOP, 378
 
         # learner
         x, w = 40, 330
@@ -170,7 +200,30 @@ class TutorRenderer:
         self._text("Black line is the target for each skill", self.f_small, MUTED, (x + 24, top + ch - 34))
 
         # tutor choice
-        x, w = 730, 330
+        if ui is not None:
+            self._controls(env, ui)
+        else:
+            self._tutor_choice(env, TUTOR_X, top, TUTOR_W, ch)
+
+        # bottom: progress to job ready, or the final result
+        by = 490
+        if env.outcome == "running":
+            self._card(40, by, W - 80, 118)
+            self._text("Progress to job-ready", self.f_head, TEXT, (64, by + 22))
+            self._text(f"{d['ready'] / env.mastery_goal * 100:.0f}%", self.f_head, TEXT, (W - 64, by + 22), right=True)
+            self._bar(64, by + 64, W - 128, 24, d["ready"] / env.mastery_goal, BLUE, goal=1.0)
+        else:
+            col, msg = {
+                "mastered": (GREEN, f"Learner is job-ready after {env.t} sessions!"),
+                "dropped_out": (RED, "The learner lost motivation and quit"),
+                "timeout": (AMBER, "Ran out of sessions"),
+            }[env.outcome]
+            pygame.draw.rect(self.screen, col, (40, by, W - 80, 118), border_radius=16)
+            self._text(msg, self.f_huge, (255, 255, 255), (W // 2, by + (46 if ui else 59)), center=True)
+            if ui:
+                self._text("Press N or click New learner to continue", self.f_body, (255, 255, 255), (W // 2, by + 90), center=True)
+
+    def _tutor_choice(self, env, x, top, w, ch):
         self._card(x, top, w, ch, "Tutor's choice")
         a = env.last_action
         card = pygame.Rect(x + 24, top + 62, w - 48, 150)
@@ -201,21 +254,64 @@ class TutorRenderer:
         self._text(f"Reward  {env.last_reward:+.2f}", self.f_small, MUTED, (x + 24, top + 312))
         self._text(f"Total  {env.total_reward:+.2f}", self.f_small, MUTED, (x + w - 24, top + 312), right=True)
 
-        # bottom: progress to job ready, or the final result
-        by = 490
-        if env.outcome == "running":
-            self._card(40, by, W - 80, 118)
-            self._text("Progress to job-ready", self.f_head, TEXT, (64, by + 22))
-            self._text(f"{d['ready'] / env.mastery_goal * 100:.0f}%", self.f_head, TEXT, (W - 64, by + 22), right=True)
-            self._bar(64, by + 64, W - 128, 24, d["ready"] / env.mastery_goal, BLUE, goal=1.0)
+    def _pills(self, ui):
+        mouse = pygame.mouse.get_pos()
+        labels = {"hint": f"Hint {'ON' if ui['hint_on'] else 'OFF'}", "auto": f"Auto {'ON' if ui['auto'] else 'OFF'}",
+                  "track": f"Track: {ui['track_label']}", "new": "New learner"}
+        active = {"hint": ui["hint_on"], "auto": ui["auto"], "track": False, "new": False}
+        for name, rect in header_pills().items():
+            col = BLUE if active[name] else TRACK_BG
+            if rect.collidepoint(mouse) and not active[name]:
+                col = mix(TRACK_BG, BLUE, 0.25)
+            pygame.draw.rect(self.screen, col, rect, border_radius=17)
+            self._text(labels[name], self.f_small, (255, 255, 255) if active[name] else TEXT, rect.center, center=True)
+
+    def _controls(self, env, ui):
+        # the tutor card in interactive mode, the user clicks the exercise
+        x, top, w, ch = TUTOR_X, TOP, TUTOR_W, 378
+        self._card(x, top, w, ch, "Your move")
+        rects = action_rects()
+        live = env.outcome == "running"
+        names = ["File", "Word", "Excel", "Safe"]
+        for c in range(4):
+            self._text(names[c], self.f_small, MUTED, (rects[c * 3].centerx, rects[c * 3].y - 16), center=True)
+        for r in range(3):
+            self._text(DIFFICULTIES[r], self.f_small, MUTED, (rects[0].x - 8, rects[r].y + 9), right=True)
+        for a, rect in rects.items():
+            base = DIFF_COLORS[a % 3] if a < 12 else (BLUE if a == 12 else (130, 100, 230))
+            chosen = env.last_action == a
+            hover = live and ui["hover"] == a
+            col = base if chosen else mix(base, (255, 255, 255), 0.45 if hover else 0.78)
+            if not live and not chosen:
+                col = mix(base, (255, 255, 255), 0.88)
+            pygame.draw.rect(self.screen, col, rect, border_radius=9)
+            if a >= 12:
+                label = "Break" if a == 12 else "Review"
+                self._text(label, self.f_body, (255, 255, 255) if chosen else TEXT, rect.center, center=True)
+            if ui["hint_on"] and ui["hint"] == a and live:
+                pygame.draw.rect(self.screen, TEXT, rect.inflate(6, 6), 3, border_radius=11)
+        if ui["hint_on"] and ui["hint"] is not None and live:
+            hint = ACTION_NAMES[ui["hint"]].replace(" / ", ", ")
+            self._text(f"Agent suggests: {hint}", self.f_small, TEXT, (x + 24, top + 281))
+        elif live:
+            self._text("Hint is hidden, press H to show it", self.f_small, MUTED, (x + 24, top + 281))
+        self._result_pill(env, pygame.Rect(x + 24, top + 300, w - 48, 44))
+        self._text(f"Reward  {env.last_reward:+.2f}", self.f_small, MUTED, (x + 24, top + 354))
+        self._text(f"Total  {env.total_reward:+.2f}", self.f_small, MUTED, (x + w - 24, top + 354), right=True)
+
+    def _result_pill(self, env, bub):
+        a = env.last_action
+        if a is None:
+            msg, bcol = "Pick the first exercise", TRACK_BG
+        elif a < 12:
+            ok = env.last_success >= 0.99
+            msg, bcol = ("Learner passed", GREEN) if ok else ("Too hard, learner failed", RED)
+        elif a == 12:
+            msg, bcol = "Learner rested", BLUE
         else:
-            col, msg = {
-                "mastered": (GREEN, f"Learner is job-ready after {env.t} sessions!"),
-                "dropped_out": (RED, "The learner lost motivation and quit"),
-                "timeout": (AMBER, "Ran out of sessions"),
-            }[env.outcome]
-            pygame.draw.rect(self.screen, col, (40, by, W - 80, 118), border_radius=16)
-            self._text(msg, self.f_huge, (255, 255, 255), (W // 2, by + 59), center=True)
+            msg, bcol = "Quick review done", (130, 100, 230)
+        pygame.draw.rect(self.screen, bcol, bub, border_radius=22)
+        self._text(msg, self.f_body, TEXT if a is None else (255, 255, 255), bub.center, center=True)
 
     def close(self):
         pygame.quit()
